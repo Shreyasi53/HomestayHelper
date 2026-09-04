@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { HOMESTAY_PHRASES } from '../data/phrases';
-import { appTTS } from '../services/tts';
+import { ttsService } from '../services/tts';
+import OfflineTranslator from './OfflineTranslator';
 
 export default function GuestCommunicator() {
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -30,7 +31,7 @@ export default function GuestCommunicator() {
   const handleSpeakPhrase = (phrase) => {
     const textToSpeak = phrase[guestLang] || phrase.en;
     setActiveSpeakingId(phrase.id);
-    appTTS.speak(
+    ttsService.speak(
       textToSpeak,
       guestLang,
       () => setActiveSpeakingId(phrase.id),
@@ -41,23 +42,28 @@ export default function GuestCommunicator() {
   const handleCustomSpeak = () => {
     const val = customPhrase.trim();
     if (!val) return;
-    appTTS.speak(val, guestLang);
+    ttsService.speak(val, guestLang);
   };
 
   return (
-    <div className="bg-white rounded-2xl p-5 mb-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <span className="text-lg font-bold text-forest-800 flex items-center gap-2">
-          <span>🗣️</span> Zero-Bars Guest Communicator
-        </span>
-        <span className="text-xs font-bold px-2.5 py-1 rounded-pill bg-forest-100 text-forest-800 uppercase tracking-wide">
-          100% Offline Audio
-        </span>
-      </div>
-      <p className="text-sm text-slate-500 mb-4">
-        Two-way phrasebook for tea garden homestays. Tap 🔊 to speak aloud in guest language.
-      </p>
+    <div className="space-y-6">
+      {/* 1. Offline AI Translator (Top Section) */}
+      <OfflineTranslator />
+
+      {/* 2. Quick Hospitality Phrases (Bottom Section) */}
+      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <span className="text-lg font-bold text-forest-800 flex items-center gap-2">
+            <span>🗣️</span> Quick Hospitality Phrases
+          </span>
+          <span className="text-xs font-bold px-2.5 py-1 rounded-pill bg-forest-100 text-forest-800 uppercase tracking-wide">
+            100% Offline Audio
+          </span>
+        </div>
+        <p className="text-sm text-slate-500 mb-4">
+          Two-way phrasebook for tea garden homestays. Tap 🔊 to speak aloud in guest language.
+        </p>
 
       {/* Language Controls Bar */}
       <div className="flex items-center justify-between bg-white p-3 rounded-xl mb-4 border border-slate-200 gap-2 flex-wrap">
@@ -182,6 +188,7 @@ export default function GuestCommunicator() {
           </button>
         </div>
       </div>
+    </div>
     </div>
   );
 }

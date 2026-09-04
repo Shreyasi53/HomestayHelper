@@ -17,9 +17,14 @@ class AudioTTS {
     }
   }
 
-  speak(text, lang = 'en-US', onStart = null, onEnd = null) {
+  speak(text, lang = 'en', onStart = null, onEnd = null) {
     if (!this.synth) {
       alert("Speech Synthesis is not supported in this browser. Please read the card aloud.");
+      if (onEnd) onEnd();
+      return;
+    }
+
+    if (!text || !text.trim()) {
       if (onEnd) onEnd();
       return;
     }
@@ -31,20 +36,31 @@ class AudioTTS {
     utterance.rate = 0.9; // Slightly slower for clarity
     utterance.pitch = 1.0;
 
-    // Map language codes
-    let langCode = 'en-US';
-    if (lang === 'hi' || lang === 'ne') langCode = 'hi-IN'; // Fallback for Nepali/Hindi
-    else if (lang === 'bn') langCode = 'bn-IN';
-    else if (lang === 'en') langCode = 'en-IN';
+    // Standard language code mappings
+    const LANG_MAP = {
+      en: 'en-IN',
+      hi: 'hi-IN',
+      bn: 'bn-IN',
+      ne: 'ne-NP'
+    };
 
-    utterance.lang = langCode;
+    const targetCode = LANG_MAP[lang] || lang;
+    utterance.lang = targetCode;
 
     if (this.voices.length === 0) {
       this._loadVoices();
     }
 
-    // Pick best matching voice
-    const matchedVoice = this.voices.find(v => v.lang.includes(langCode) || v.lang.startsWith(langCode.substring(0, 2)));
+    // Match exact voice or prefix, with graceful fallback for Indic scripts
+    let matchedVoice = this.voices.find(v => v.lang === targetCode || v.lang.replace('_', '-') === targetCode);
+    if (!matchedVoice) {
+      matchedVoice = this.voices.find(v => v.lang.startsWith(targetCode.substring(0, 2)));
+    }
+    // Nepali fallback to Hindi voice if ne-NP voice is not installed in OS
+    if (!matchedVoice && targetCode === 'ne-NP') {
+      matchedVoice = this.voices.find(v => v.lang.startsWith('hi'));
+    }
+
     if (matchedVoice) {
       utterance.voice = matchedVoice;
     }
@@ -52,7 +68,7 @@ class AudioTTS {
     if (onStart) utterance.onstart = onStart;
     if (onEnd) utterance.onend = onEnd;
     utterance.onerror = (err) => {
-      console.warn("TTS Error:", err);
+      console.warn("[TTS] Speech synthesis notice/error:", err);
       if (onEnd) onEnd();
     };
 
@@ -65,4 +81,5 @@ class AudioTTS {
 }
 
 export const appTTS = new AudioTTS();
+export const ttsService = appTTS;
 export default appTTS;
