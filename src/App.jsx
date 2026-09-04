@@ -16,8 +16,18 @@ import {
 export default function App() {
   const [activeTab, setActiveTab] = useState('tabCommunicator');
   const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [isStandalone, setIsStandalone] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(typeof window !== 'undefined' ? window.deferredPrompt || null : null);
+  const [isStandalone, setIsStandalone] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return Boolean(
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      window.matchMedia('(display-mode: minimal-ui)').matches ||
+      window.matchMedia('(display-mode: window-controls-overlay)').matches ||
+      window.navigator.standalone === true ||
+      (document.referrer && document.referrer.includes('android-app://'))
+    );
+  });
   const [showInstallNotice, setShowInstallNotice] = useState(false);
 
   useEffect(() => {
@@ -45,22 +55,50 @@ export default function App() {
         .catch(err => console.warn('[PWA] Service Worker registration failed:', err));
     }
 
-    // 4. Check Standalone & PWA Install Prompt Listener
+    // 4. Standalone & PWA Install Prompt Listeners
     const checkStandalone = () => {
       const isStandaloneMode = (typeof window !== 'undefined') && (
         window.matchMedia('(display-mode: standalone)').matches ||
-        window.navigator.standalone === true
+        window.matchMedia('(display-mode: fullscreen)').matches ||
+        window.matchMedia('(display-mode: minimal-ui)').matches ||
+        window.matchMedia('(display-mode: window-controls-overlay)').matches ||
+        window.navigator.standalone === true ||
+        (document.referrer && document.referrer.includes('android-app://'))
       );
-      setIsStandalone(Boolean(isStandaloneMode));
+      if (isStandaloneMode) {
+        setIsStandalone(true);
+        setShowInstallNotice(false);
+      }
     };
     checkStandalone();
 
+    const mediaQuery = window.matchMedia('(display-mode: standalone)');
+    const handleMediaChange = (e) => {
+      if (e.matches) {
+        setIsStandalone(true);
+        setShowInstallNotice(false);
+      }
+    };
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleMediaChange);
+    } else if (mediaQuery.addListener) {
+      mediaQuery.addListener(handleMediaChange);
+    }
+
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
+      window.deferredPrompt = e;
       setDeferredPrompt(e);
     };
 
+    const handlePwaInstallable = () => {
+      if (window.deferredPrompt) {
+        setDeferredPrompt(window.deferredPrompt);
+      }
+    };
+
     const handleAppInstalled = () => {
+      window.deferredPrompt = null;
       setDeferredPrompt(null);
       setIsStandalone(true);
       setShowInstallNotice(false);
@@ -68,25 +106,39 @@ export default function App() {
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('pwa-installable', handlePwaInstallable);
     window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('pwa-installable', handlePwaInstallable);
       window.removeEventListener('appinstalled', handleAppInstalled);
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleMediaChange);
+      } else if (mediaQuery.removeListener) {
+        mediaQuery.removeListener(handleMediaChange);
+      }
     };
   }, []);
 
   const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
+    if (isStandalone) return;
+    const promptEvent = deferredPrompt || window.deferredPrompt;
+    if (promptEvent) {
+      promptEvent.prompt();
+      const { outcome } = await promptEvent.userChoice;
       console.log(`[PWA] Install prompt outcome: ${outcome}`);
+      window.deferredPrompt = null;
       setDeferredPrompt(null);
+      if (outcome === 'accepted') {
+        setIsStandalone(true);
+        setShowInstallNotice(false);
+      }
     } else {
       setShowInstallNotice(true);
-      setTimeout(() => setShowInstallNotice(false), 5000);
+      setTimeout(() => setShowInstallNotice(false), 6000);
     }
   };
 
