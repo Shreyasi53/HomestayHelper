@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Homestay Helper - Offline AI Toolkit for Garden Villages</title>
+  <meta name="description" content="Offline toolkit for first-time homestay hosts in tea garden villages of Darjeeling, Mirik & Kurseong. Multilingual communicator, cash ledger, AI listing generator & host checklist.">
+  <meta name="theme-color" content="#1b4332">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-top">
+      <div class="brand-wrapper">
+        <img src="./icons/icon-192.png" alt="Homestay Helper Logo" class="app-logo-img">
+        <div class="brand-titles">
+          <h1>Homestay Helper <span>🏔️</span></h1>
+          <p>Tea Garden Villages • Darjeeling Hills</p>
+        </div>
+      </div>
+      <div class="header-status">
+        <span class="offline-badge">
+          <span class="status-dot"></span>
+          <span id="networkStatusText">Zero Bars (Offline)</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Offline Notice Banner -->
+  <div id="offlineBanner" class="offline-banner" style="display: none;">
+    <span>📡</span> Operating in 100% Offline Mode (Zero Signal). All guest data & AI translations are stored locally on device.
+  </div>
+
+  <!-- Navigation Bar (Desktop / Tablet) -->
+  <nav class="nav-tabs">
+    <button class="tab-btn active" data-tab="tabCommunicator">
+      <span>🗣️</span> Guest Communicator
+    </button>
+    <button class="tab-btn" data-tab="tabLedger">
+      <span>📖</span> Bookings & Cash Ledger
+    </button>
+    <button class="tab-btn" data-tab="tabListing">
+      <span>✨</span> AI Listing & Pricing
+    </button>
+    <button class="tab-btn" data-tab="tabChecklist">
+      <span>✅</span> Host Readiness Checklist
+    </button>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="main-content">
+    
+    <!-- Tab 1: Guest Communicator (Phrasebook + TTS) -->
+    <section id="tabCommunicator" class="tab-pane active">
+      <div id="communicatorContainer"></div>
+    </section>
+
+    <!-- Tab 2: Bookings & Cash Ledger -->
+    <section id="tabLedger" class="tab-pane">
+      <div id="ledgerContainer"></div>
+    </section>
+
+    <!-- Tab 3: AI Listing & Pricing Generator -->
+    <section id="tabListing" class="tab-pane">
+      <div id="listingContainer"></div>
+    </section>
+
+    <!-- Tab 4: Host Checklist & Hill Lore Guide -->
+    <section id="tabChecklist" class="tab-pane">
+      <div id="checklistContainer"></div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Navigation Bar (Mobile View) -->
+  <nav class="bottom-nav">
+    <button class="bnav-item active" data-tab="tabCommunicator">
+      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+      <span>Translate</span>
+    </button>
+    <button class="bnav-item" data-tab="tabLedger">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+      <span>Ledger</span>
+    </button>
+    <button class="bnav-item" data-tab="tabListing">
+      <svg viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.45L19.5 19h-15L12 5.45z"/></svg>
+      <span>AI Listing</span>
+    </button>
+    <button class="bnav-item" data-tab="tabChecklist">
+      <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      <span>Checklist</span>
+    </button>
+  </nav>
+
+  <!-- Application Scripts -->
+  <script src="./js/data/phrases.js"></script>
+  <script src="./js/data/checklist.js"></script>
+  <script src="./js/db.js"></script>
+  <script src="./js/utils/tts.js"></script>
+  <script src="./js/utils/ai.js"></script>
+  <script src="./js/utils/share.js"></script>
+  <script src="./js/components/communicator.js"></script>
+  <script src="./js/components/ledger.js"></script>
+  <script src="./js/components/listing.js"></script>
+  <script src="./js/components/checklist.js"></script>
+  <script src="./js/app.js"></script>
+
+</body>
+</html>
