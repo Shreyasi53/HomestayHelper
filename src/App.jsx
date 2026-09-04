@@ -5,17 +5,20 @@ import BookingsLedger from './components/BookingsLedger';
 import ListingPricing from './components/ListingPricing';
 import HostReadinessChecklist from './components/HostReadinessChecklist';
 import {
-  Mountain,
   Radio,
   MessageSquare,
   BookOpen,
   Sparkles,
-  ClipboardCheck
+  ClipboardCheck,
+  Download
 } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('tabCommunicator');
   const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [showInstallNotice, setShowInstallNotice] = useState(false);
 
   useEffect(() => {
     // 1. Initialize IndexedDB & Seed sample data
@@ -42,46 +45,113 @@ export default function App() {
         .catch(err => console.warn('[PWA] Service Worker registration failed:', err));
     }
 
+    // 4. Check Standalone & PWA Install Prompt Listener
+    const checkStandalone = () => {
+      const isStandaloneMode = (typeof window !== 'undefined') && (
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true
+      );
+      setIsStandalone(Boolean(isStandaloneMode));
+    };
+    checkStandalone();
+
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null);
+      setIsStandalone(true);
+      setShowInstallNotice(false);
+      console.log('[PWA] Homestay Helper was successfully installed');
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`[PWA] Install prompt outcome: ${outcome}`);
+      setDeferredPrompt(null);
+    } else {
+      setShowInstallNotice(true);
+      setTimeout(() => setShowInstallNotice(false), 5000);
+    }
+  };
+
   const navItems = [
-    { id: 'tabCommunicator', label: 'Guest Communicator', Icon: MessageSquare },
-    { id: 'tabLedger', label: 'Bookings & Cash Ledger', Icon: BookOpen },
-    { id: 'tabListing', label: 'AI Listing & Pricing', Icon: Sparkles },
-    { id: 'tabChecklist', label: 'Host Readiness Checklist', Icon: ClipboardCheck },
+    { id: 'tabCommunicator', label: 'Communicator', Icon: MessageSquare },
+    { id: 'tabLedger', label: 'Bookings & Ledger', Icon: BookOpen },
+    { id: 'tabListing', label: 'AI Listing', Icon: Sparkles },
+    { id: 'tabChecklist', label: 'Checklist', Icon: ClipboardCheck },
   ];
 
   return (
     <div className="min-h-screen bg-[#f4f7f5] pb-24 md:pb-12 text-slate-800">
       {/* App Header */}
       <header className="bg-gradient-to-r from-forest-900 to-forest-800 text-white px-4 py-3.5 sticky top-0 z-40 shadow-md">
-        <div className="max-w-5xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
+        <div className="max-w-5xl mx-auto flex justify-between items-center gap-2">
+          <div className="flex items-center gap-3 min-w-0">
             <img
               src="./icons/icon-192.png"
               alt="Homestay Helper Logo"
-              className="w-11 h-11 rounded-xl border-2 border-amberGold object-cover shadow-sm"
+              className="w-11 h-11 rounded-xl border-2 border-amberGold object-contain bg-forest-900 shadow-sm shrink-0"
             />
-            <div>
-              <h1 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-1.5 leading-tight">
-                Homestay Helper <Mountain className="w-5 h-5 text-emerald-300 inline-block" aria-hidden="true" />
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold tracking-tight text-white leading-tight truncate">
+                Homestay Helper
               </h1>
-              <p className="text-xs text-emerald-200">
+              <p className="text-xs text-emerald-200 truncate">
                 Tea Garden Villages • Darjeeling Hills
               </p>
             </div>
           </div>
 
-          <div className="flex items-center">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill text-[11px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
-              <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)] animate-pulse" />
-              {isOffline ? 'Zero Bars (Offline)' : 'Online'}
-            </span>
-          </div>
+          {!isStandalone && (
+            <div className="relative flex items-center shrink-0">
+              <button
+                onClick={handleInstallClick}
+                title="Download and install Homestay Helper app on your device"
+                aria-label="Download App"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg text-xs font-semibold bg-amberGold text-forest-900 hover:bg-amber-400 active:scale-95 transition-all shadow-sm border border-amber-300 shrink-0"
+              >
+                <Download className="w-4 h-4 text-forest-900 shrink-0" aria-hidden="true" />
+                <span className="hidden sm:inline">Download App</span>
+                <span className="sm:hidden">Download</span>
+              </button>
+
+              {showInstallNotice && (
+                <div className="absolute right-0 top-full mt-2 w-64 p-3 bg-slate-900 text-white text-xs rounded-xl shadow-2xl border border-slate-700 z-50 animate-fadeIn">
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="font-bold text-amberGold flex items-center gap-1">
+                      <Download className="w-3.5 h-3.5" aria-hidden="true" /> Install Homestay Helper
+                    </p>
+                    <button
+                      onClick={() => setShowInstallNotice(false)}
+                      className="text-slate-400 hover:text-white text-xs px-1"
+                      aria-label="Close"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p className="text-slate-200 text-[11px] leading-relaxed">
+                    To install: open your browser menu (<span className="font-semibold text-white">⋮</span> or share button) and choose <strong>Add to Home screen</strong> or <strong>Install app</strong>.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </header>
 
