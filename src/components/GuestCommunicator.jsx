@@ -8,7 +8,6 @@ export default function GuestCommunicator() {
   const [guestLang, setGuestLang] = useState('en');
   const [searchVal, setSearchVal] = useState('');
   const [activeSpeakingId, setActiveSpeakingId] = useState(null);
-  const [customPhrase, setCustomPhrase] = useState('');
 
   const categories = [
     { id: 'all', label: '🌟 All Phrases' },
@@ -37,12 +36,6 @@ export default function GuestCommunicator() {
       () => setActiveSpeakingId(phrase.id),
       () => setActiveSpeakingId(null)
     );
-  };
-
-  const handleCustomSpeak = () => {
-    const val = customPhrase.trim();
-    if (!val) return;
-    ttsService.speak(val, guestLang);
   };
 
   return (
@@ -159,34 +152,6 @@ export default function GuestCommunicator() {
             );
           })
         )}
-      </div>
-
-      {/* Quick Phrase Builder */}
-      <div className="mt-6 bg-gradient-to-r from-forest-800 to-forest-700 text-white rounded-xl p-5 shadow-md">
-        <h3 className="text-sm font-bold mb-1 flex items-center gap-2">
-          <span>✨</span> Instant Homestay Message Helper
-        </h3>
-        <p className="text-xs opacity-90 mb-3">
-          Type a custom message for your guest to speak out loud:
-        </p>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={customPhrase}
-            onChange={(e) => setCustomPhrase(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleCustomSpeak();
-            }}
-            placeholder="e.g. Please leave your shoes at the entrance door..."
-            className="flex-1 bg-white text-slate-800 px-3 py-2 rounded-lg text-sm border-none focus:outline-none"
-          />
-          <button
-            onClick={handleCustomSpeak}
-            className="bg-amberGold hover:bg-amberGold-hover text-white font-semibold text-xs px-4 py-2 rounded-lg shadow transition-colors inline-flex items-center gap-1"
-          >
-            🔊 Speak Aloud
-          </button>
-        </div>
       </div>
     </div>
     </div>

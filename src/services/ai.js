@@ -1,88 +1,183 @@
-// On-Device AI Generator & Smart Pricing Synthesizer
+/**
+ * On-Device Gemma AI Service for Homestay Helper
+ * Connects directly to local Ollama runtime running Gemma 4 E2B (gemma4:e2b)
+ * 100% Offline, Zero Cloud APIs.
+ */
+
+const MODEL_NAME = 'gemma4:e2b';
+
 class HomestayAI {
   constructor() {
-    this.hasChromeAI = typeof window !== 'undefined' && typeof window.ai !== 'undefined' && typeof window.ai.assistant !== 'undefined';
+    this.modelName = MODEL_NAME;
+    this.status = 'checking'; // 'checking' | 'ready' | 'generating' | 'offline' | 'unavailable' | 'error'
+    this.statusListeners = new Set();
+    this.lastError = null;
   }
 
   /**
-   * Generates a polished homestay listing description in English and Hindi
+   * Subscribe to AI engine status updates
    */
-  async generateListingText(profile) {
-    const { name, village, hostName, amenities = [], roomCount = 1 } = profile;
+  subscribeStatus(listener) {
+    this.statusListeners.add(listener);
+    listener(this.status, this.lastError);
+    return () => this.statusListeners.delete(listener);
+  }
 
-    // Check if Chrome AI Prompt API is available
-    if (this.hasChromeAI) {
+  _setStatus(status, error = null) {
+    this.status = status;
+    this.lastError = error;
+    this.statusListeners.forEach((fn) => {
       try {
-        const session = await window.ai.assistant.create();
-        const prompt = `Write an inviting homestay listing for "${name}" hosted by ${hostName} in ${village} village near Darjeeling. Key amenities: ${amenities.join(', ')}. Mention home-cooked food, mountain views, and tea garden walks. Keep it under 100 words.`;
-        const aiResponse = await session.prompt(prompt);
-        session.destroy();
-        if (aiResponse && aiResponse.trim().length > 20) {
-          return {
-            en: aiResponse.trim(),
-            hi: ''
-          };
+        fn(status, error);
+      } catch (err) {
+        console.error('[AI] Error in status listener:', err);
+      }
+    });
+  }
+
+  /**
+   * Tries to fetch from Vite proxy first, falling back to direct localhost URL if needed
+   */
+  async _fetchOllama(endpoint, options = {}) {
+    const urls = [
+      `/api/ollama${endpoint}`,
+      `http://127.0.0.1:11434${endpoint}`
+    ];
+
+    let lastFetchError = null;
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, options);
+        if (res.ok) {
+          return res;
         }
       } catch (err) {
-        console.warn('[AI] Chrome Prompt API error, using local synthesizer fallback:', err);
+        lastFetchError = err;
       }
     }
-
-    // Local Synthesizer Fallback (100% offline guaranteed)
-    const amenityText = amenities.length > 0
-      ? `Our home features ${amenities.join(', ')}.`
-      : `Experience warm hill hospitality with home-cooked organic meals.`;
-
-    const englishListing = `🏡 Welcome to ${name || 'Our Hill Homestay'}, hosted by ${hostName || 'our family'} in the scenic tea-garden village of ${village || 'Mirik'} near Darjeeling!
-
-🌿 ${amenityText} We offer ${roomCount} cozy room(s) with clean linens, hot bucket baths, and traditional Nepalese Thali meals. Enjoy fresh morning Darjeeling First Flush tea with panoramic views of tea terraces and mountain peaks.
-
-📍 Location: ${village || 'Darjeeling Hills'}
-☕ Specialties: Fresh Organic Tea, Homemade Momos, Tea Garden Walks.
-📞 Bookings & Inquiry: Contact host directly via cash/phone upon arrival.`;
-
-    const hindiListing = `🏡 ${name || 'हमारे होमस्टे'} में आपका हार्दिक स्वागत है!
-आयोजक: ${hostName || 'हमारा परिवार'} | स्थान: ${village || 'दार्जिलिंग पहाड़ी गाँव'}
-
-🌿 सुविधाएं: ${amenities.length ? amenities.join(', ') : 'घर का बना शुद्ध भोजन, चाय बागान की सैर, गर्म पानी'}।
-हमारे पास ${roomCount} आरामदायक कमरे हैं। रोज सुबह ताजा दार्जिलिंग फर्स्ट फ्लश चाय और कंचनजंगा के सुंदर दृश्य का आनंद लें।`;
-
-    return {
-      en: englishListing,
-      hi: hindiListing
-    };
+    throw lastFetchError || new Error(`Failed to reach Ollama endpoint ${endpoint}`);
   }
 
   /**
-   * Calculates smart pricing recommendation (Min & Max rate per night)
+   * Checks whether Ollama is active and if the gemma4:e2b model is available locally.
+   * Returns: 'ready' | 'offline' | 'unavailable'
    */
-  calculatePricing(village, roomType, amenities = []) {
-    let baseRate = 1200; // Base rate in INR
+  async checkEngineStatus() {
+    try {
+      this._setStatus(this.status === 'generating' ? 'generating' : 'checking');
+      const res = await this._fetchOllama('/api/tags', { method: 'GET' });
+      const data = await res.json();
+      
+      const models = data.models || [];
+      const hasGemma = models.some((m) => {
+        const name = (m.name || m.model || '').toLowerCase();
+        return name === MODEL_NAME || name.startsWith('gemma4:e2b');
+      });
 
-    // Village factor
-    const touristVillages = ['darjeeling', 'mirik', 'kurseong', 'takdah', 'tinchuley', 'lava'];
-    const vLower = (village || '').toLowerCase();
-    if (touristVillages.some(v => vLower.includes(v))) {
-      baseRate += 300;
+      if (hasGemma) {
+        this._setStatus('ready');
+        return 'ready';
+      } else {
+        const err = `Ollama is running, but model "${MODEL_NAME}" is missing.`;
+        this._setStatus('unavailable', err);
+        return 'unavailable';
+      }
+    } catch (err) {
+      const errMsg = 'Ollama is offline or unreachable on http://127.0.0.1:11434';
+      this._setStatus('offline', errMsg);
+      return 'offline';
     }
+  }
 
-    // Room type factor
-    if (roomType === 'attached_bath') baseRate += 400;
-    if (roomType === 'family_suite') baseRate += 800;
+  /**
+   * Builds the strict, grounded listing generation prompt for Gemma
+   */
+  _buildPrompt(profile) {
+    const {
+      name = '',
+      hostName = '',
+      village = '',
+      roomType = 'attached_bath',
+      roomCount = 1,
+      amenities = []
+    } = profile;
 
-    // Amenities factor (each amenity adds value)
-    baseRate += (amenities.length * 150);
+    const roomTypeLabel = {
+      attached_bath: 'Standard Attached Bath Room',
+      shared_bath: 'Traditional Shared Bath Room',
+      family_suite: 'Family Suite (4 Bed)'
+    }[roomType] || roomType;
 
-    const offPeakMin = Math.round(baseRate * 0.85 / 50) * 50;
-    const offPeakMax = Math.round(baseRate * 1.05 / 50) * 50;
-    const peakMin = Math.round(baseRate * 1.25 / 50) * 50;
-    const peakMax = Math.round(baseRate * 1.55 / 50) * 50;
+    const amenitiesList = amenities.length > 0
+      ? amenities.join(', ')
+      : 'Basic authentic hill hospitality';
 
-    return {
-      offPeak: `₹${offPeakMin} - ₹${offPeakMax}`,
-      peak: `₹${peakMin} - ₹${peakMax}`,
-      suggestedBase: baseRate
-    };
+    return `You are a helpful homestay listing writer.
+Write an attractive, warm, and truthful homestay listing based ONLY on the verified details below.
+
+Verified Homestay Profile:
+- Homestay Name: ${name || 'Village Homestay'}
+- Host Name(s): ${hostName || 'Local Host Family'}
+- Village / Location: ${village || 'Darjeeling Hills'}
+- Room Category: ${roomTypeLabel}
+- Total Rooms Available: ${roomCount}
+- Verified Amenities: ${amenitiesList}
+
+Instructions & Constraints:
+1. Use ONLY the information provided in the profile above.
+2. Do NOT invent or assume extra amenities, facilities, distances, transportation, or views not explicitly listed.
+3. Mention the tea garden or village setting only when supported by the location and amenities above.
+4. Do NOT include pricing or rates (pricing is handled by a separate calculator).
+5. Do NOT include meta-commentary like "Here is your listing" or "Hope this helps".
+6. Format as a clean, polished listing description ready to share with prospective guests.`;
+  }
+
+  /**
+   * Generates natural language homestay listing text using the local Gemma model.
+   * 
+   * @param {Object} profile - Homestay profile data
+   * @returns {Promise<{ en: string }>} Generated listing object
+   */
+  async generateListingText(profile) {
+    const prompt = this._buildPrompt(profile);
+    this._setStatus('generating');
+
+    try {
+      const payload = {
+        model: MODEL_NAME,
+        prompt: prompt,
+        stream: false
+      };
+
+      const res = await this._fetchOllama('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      let responseText = data.response || '';
+
+      // If a thinking model outputs <think>...</think> tags, extract only final text
+      responseText = responseText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+      if (!responseText) {
+        throw new Error('Gemma returned an empty response.');
+      }
+
+      this._setStatus('ready');
+      return {
+        en: responseText
+      };
+    } catch (err) {
+      console.error('[AI] Gemma generation failed:', err);
+      const isConnectionErr = err.message && (err.message.includes('fetch') || err.message.includes('reach'));
+      const statusToSet = isConnectionErr ? 'offline' : 'error';
+      this._setStatus(statusToSet, err.message);
+      throw err;
+    }
   }
 }
 

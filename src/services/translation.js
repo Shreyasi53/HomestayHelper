@@ -1,6 +1,6 @@
 /**
  * Translation Service
- * Communicates with Web Worker for local AI translation.
+ * Communicates with Web Worker for local IndicTrans2 AI translation.
  * Keeps all model-loading and worker coordination outside of React UI components.
  */
 
@@ -12,7 +12,7 @@ class TranslationService {
     this.statusListeners = new Set();
     this.currentStatus = {
       status: 'UNAVAILABLE',
-      message: 'Local AI translation model is not available yet.'
+      message: 'Local AI translation ready to load on demand.'
     };
 
     this.initWorker();
@@ -28,25 +28,26 @@ class TranslationService {
       );
 
       this.worker.onmessage = (e) => {
-        const { id, action, status, message, success, error, translatedText } = e.data || {};
+        const { id, type, action, status, message, progress, success, error, translatedText } = e.data || {};
+        const msgType = type || action;
 
-        if (action === 'INIT' || action === 'CHECK_STATUS') {
-          this.currentStatus = { status, message };
+        if (msgType === 'status' || status) {
+          this.currentStatus = {
+            status: status || this.currentStatus.status,
+            message: message || this.currentStatus.message,
+            progress
+          };
           this.notifyStatusListeners();
         }
 
         if (id && this.pendingRequests.has(id)) {
-          const { resolve, reject } = this.pendingRequests.get(id);
-          this.pendingRequests.delete(id);
-
-          if (success !== false) {
-            resolve({
-              success: true,
-              translatedText,
-              status,
-              message
-            });
-          } else {
+          if (msgType === 'result' || success === true) {
+            const { resolve } = this.pendingRequests.get(id);
+            this.pendingRequests.delete(id);
+            resolve(translatedText);
+          } else if (msgType === 'error' || success === false) {
+            const { reject } = this.pendingRequests.get(id);
+            this.pendingRequests.delete(id);
             reject(new Error(error || 'Translation request failed'));
           }
         }
@@ -77,7 +78,7 @@ class TranslationService {
     const id = ++this.requestIdCounter;
     this.worker.postMessage({
       id,
-      action: 'CHECK_STATUS'
+      type: 'CHECK_STATUS'
     });
   }
 
@@ -100,8 +101,8 @@ class TranslationService {
   /**
    * Main translation method
    * @param {string} text - Input text to translate
-   * @param {string} sourceLanguage - e.g., 'en', 'hi', 'bn', 'ne'
-   * @param {string} targetLanguage - e.g., 'en', 'hi', 'bn', 'ne'
+   * @param {string} sourceLanguage - 'en' | 'hi' | 'bn' | 'ne'
+   * @param {string} targetLanguage - 'en' | 'hi' | 'bn' | 'ne'
    * @returns {Promise<string>} Translated text
    */
   async translateText(text, sourceLanguage, targetLanguage) {
@@ -113,24 +114,33 @@ class TranslationService {
       return text.trim();
     }
 
+    // Check Indic -> Indic rule
+    if (sourceLanguage !== 'en' && targetLanguage !== 'en') {
+      throw new Error('Direct Indic-to-Indic translation is not enabled yet.');
+    }
+
     if (!this.worker) {
       throw new Error('Local AI translation model is not available yet.');
     }
 
     return new Promise((resolve, reject) => {
       const id = ++this.requestIdCounter;
-      this.pendingRequests.set(id, {
-        resolve: (result) => resolve(result.translatedText),
-        reject
-      });
+      this.pendingRequests.set(id, { resolve, reject });
 
       this.worker.postMessage({
         id,
-        action: 'TRANSLATE',
+        type: 'TRANSLATE',
         text: text.trim(),
         sourceLanguage,
         targetLanguage
       });
+    });
+  }
+
+  releaseModel() {
+    if (!this.worker) return;
+    this.worker.postMessage({
+      type: 'RELEASE'
     });
   }
 }
