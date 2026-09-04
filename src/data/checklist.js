@@ -1,46 +1,42 @@
 // First-Time Host Checklist & Local Hill Hospitality Guide
-export const HOST_CHECKLIST = [
+export const DEFAULT_CATEGORIES = [
   {
-    category: "Room Preparation",
-    icon: "🛏",
-    items: [
-      { id: "room_1", text: "Clean fresh bedsheets, pillow covers, and washed blankets ready." },
-      { id: "room_2", text: "Place 2 clean bath towels and a bar of soap on the side table." },
-      { id: "room_3", text: "Fill the bedside pitcher with fresh boiled/filtered spring water." },
-      { id: "room_4", text: "Charge emergency solar lantern and place it on the nightstand." },
-      { id: "room_5", text: "Check room window latches and curtain cords." }
+    id: "cat_room",
+    title: "Room Preparation",
+    custom: false,
+    tasks: [
+      { id: "room_1", text: "Clean fresh bedsheets, pillow covers, and washed blankets ready.", completed: true },
+      { id: "room_2", text: "Place 2 clean bath towels and a bar of soap on the side table.", completed: false },
+      { id: "room_3", text: "Fill the bedside pitcher with fresh boiled/filtered spring water.", completed: true },
+      { id: "room_4", text: "Charge emergency solar lantern and place it on the nightstand.", completed: false },
+      { id: "room_5", text: "Check room window latches and curtain cords.", completed: false }
     ]
   },
   {
-    category: "Hygiene & Water Management",
-    icon: "🚰",
-    items: [
-      { id: "hyg_1", text: "Sanitize toilet seat and check bathroom water bucket + mug." },
-      { id: "hyg_2", text: "Heat hot water for morning bath by 6:30 AM." },
-      { id: "hyg_3", text: "Empty wastebasket and put fresh liner bag." },
-      { id: "hyg_4", text: "Stock extra toilet paper / water spray nozzle." }
+    id: "cat_hyg",
+    title: "Hygiene & Water Management",
+    custom: false,
+    tasks: [
+      { id: "hyg_1", text: "Sanitize toilet seat and check bathroom water bucket + mug.", completed: false },
+      { id: "hyg_2", text: "Heat hot water for morning bath by 6:30 AM.", completed: true },
+      { id: "hyg_3", text: "Empty wastebasket and put fresh liner bag.", completed: false },
+      { id: "hyg_4", text: "Stock extra toilet paper / water spray nozzle.", completed: false }
     ]
   },
   {
-    category: "Meal Prep & Hospitality",
-    icon: "🍲",
-    items: [
-      { id: "meal_chk_1", text: "Ask guest about dietary restrictions (Pure Veg / Jain / Egg / Non-Veg)." },
-      { id: "meal_chk_2", text: "Keep fresh Darjeeling First Flush tea leaves and cow milk ready." },
-      { id: "meal_chk_3", text: "Prepare evening snack (Hot Momos, Gundruk soup, or Pakoras)." },
-      { id: "meal_chk_4", text: "Confirm dinner serving time with guest upon check-in." }
-    ]
-  },
-  {
-    category: "Safety & Emergency Preparedness",
-    icon: "🔦",
-    items: [
-      { id: "safe_1", text: "Keep First Aid kit stocked (Paracetamol, Band-Aids, Antiseptic cream, ORS)." },
-      { id: "safe_2", text: "Keep local village head / Gram Panchayat and nearest health clinic phone numbers written down." },
-      { id: "safe_3", text: "Note down guest emergency contact details and ID copy in the ledger." }
+    id: "cat_meal",
+    title: "Meal Prep & Hospitality",
+    custom: false,
+    tasks: [
+      { id: "meal_chk_1", text: "Ask guest about dietary restrictions (Pure Veg / Jain / Egg / Non-Veg).", completed: false },
+      { id: "meal_chk_2", text: "Keep fresh Darjeeling First Flush tea leaves and cow milk ready.", completed: false },
+      { id: "meal_chk_3", text: "Prepare evening snack (Hot Momos, Gundruk soup, or Pakoras).", completed: false },
+      { id: "meal_chk_4", text: "Confirm dinner serving time with guest upon check-in.", completed: false }
     ]
   }
 ];
+
+export const HOST_CHECKLIST = DEFAULT_CATEGORIES;
 
 export const LOCAL_HILL_FACTS = [
   {

@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { homestayDB } from '../services/db';
 import { ShareUtils } from '../services/share';
+import {
+  Plus,
+  Banknote,
+  Download,
+  BedDouble,
+  Receipt,
+  Trash2,
+  UserPlus
+} from 'lucide-react';
 
 export default function BookingsLedger() {
   const [guests, setGuests] = useState([]);
@@ -183,19 +192,22 @@ export default function BookingsLedger() {
           }}
           className="bg-forest-800 hover:bg-forest-700 text-white font-semibold text-sm px-4 py-2.5 rounded-lg transition-colors shadow-sm inline-flex items-center gap-1.5"
         >
-          ➕ New Guest Booking
+          <Plus className="w-4 h-4" aria-hidden="true" />
+          <span>New Guest Booking</span>
         </button>
         <button
           onClick={() => setShowTxModal(true)}
           className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-sm px-4 py-2.5 rounded-lg border border-slate-300 transition-colors inline-flex items-center gap-1.5"
         >
-          💵 Log Income / Expense
+          <Banknote className="w-4 h-4" aria-hidden="true" />
+          <span>Log Income / Expense</span>
         </button>
         <button
           onClick={handleExportCSV}
           className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-sm px-4 py-2.5 rounded-lg border border-slate-300 transition-colors ml-auto inline-flex items-center gap-1.5"
         >
-          📥 Export CSV Ledger
+          <Download className="w-4 h-4" aria-hidden="true" />
+          <span>Export CSV Ledger</span>
         </button>
       </div>
 
@@ -203,7 +215,8 @@ export default function BookingsLedger() {
       <div className="bg-white rounded-2xl p-5 mb-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-center justify-between gap-2 mb-4">
           <span className="text-lg font-bold text-forest-800 flex items-center gap-2">
-            <span>🛏</span> Active & Recent Guest Bookings
+            <BedDouble className="w-5 h-5 text-forest-800" aria-hidden="true" />
+            <span>Active & Recent Guest Bookings</span>
           </span>
           <span className="text-xs font-bold px-2.5 py-1 rounded-pill bg-forest-100 text-forest-800">
             {guests.length} Total
@@ -284,7 +297,8 @@ export default function BookingsLedger() {
       <div className="bg-white rounded-2xl p-5 mb-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-center justify-between gap-2 mb-4">
           <span className="text-lg font-bold text-forest-800 flex items-center gap-2">
-            <span>🧾</span> Cash Register Transactions
+            <Receipt className="w-5 h-5 text-forest-800" aria-hidden="true" />
+            <span>Cash Register Transactions</span>
           </span>
         </div>
 
@@ -330,10 +344,10 @@ export default function BookingsLedger() {
                     <td className="py-3 px-3">
                       <button
                         onClick={() => handleDeleteTx(t.id)}
-                        className="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs px-2.5 py-1 rounded-lg transition-colors"
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1"
                         title="Delete transaction"
                       >
-                        🗑
+                        <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </button>
                     </td>
                   </tr>
@@ -349,7 +363,10 @@ export default function BookingsLedger() {
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-forest-800">➕ Add New Guest Booking</h3>
+              <h3 className="text-lg font-bold text-forest-800 flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-forest-800" aria-hidden="true" />
+                <span>Add New Guest Booking</span>
+              </h3>
               <button
                 onClick={() => setShowGuestModal(false)}
                 className="text-slate-400 hover:text-slate-600 text-2xl leading-none"
@@ -466,7 +483,10 @@ export default function BookingsLedger() {
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-forest-800">💵 Log Cash Transaction</h3>
+              <h3 className="text-lg font-bold text-forest-800 flex items-center gap-2">
+                <Banknote className="w-5 h-5 text-forest-800" aria-hidden="true" />
+                <span>Log Cash Transaction</span>
+              </h3>
               <button
                 onClick={() => setShowTxModal(false)}
                 className="text-slate-400 hover:text-slate-600 text-2xl leading-none"

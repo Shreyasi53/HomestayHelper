@@ -2,6 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { translationService } from '../services/translation';
 import { speechRecognitionService } from '../services/speechRecognition';
 import { ttsService } from '../services/tts';
+import {
+  Globe2,
+  ArrowLeftRight,
+  Mic,
+  Square,
+  Sparkles,
+  AlertTriangle,
+  Volume2,
+  Copy,
+  Check
+} from 'lucide-react';
 
 const LANGUAGES = [
   { code: 'en', label: 'English', native: 'English' },
@@ -149,7 +160,7 @@ export default function OfflineTranslator() {
       {/* Header with Title and AI Model Status */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100">
         <div className="flex items-center gap-2.5">
-          <span className="text-2xl" role="img" aria-label="Globe">🌐</span>
+          <Globe2 className="w-6 h-6 text-indigo-600" aria-hidden="true" />
           <div>
             <h2 className="text-lg font-bold text-slate-800 tracking-tight">Offline AI Translator</h2>
             <p className="text-xs text-slate-500">Local on-device translation engine</p>
@@ -184,9 +195,9 @@ export default function OfflineTranslator() {
             type="button"
             onClick={handleSwapLanguages}
             aria-label="Swap Languages"
-            className="p-2.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-600 active:scale-95 transition-all shadow-sm"
+            className="p-2.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-600 active:scale-95 transition-all shadow-sm flex items-center justify-center"
           >
-            ⇄
+            <ArrowLeftRight className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
 
@@ -229,7 +240,11 @@ export default function OfflineTranslator() {
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
               }`}
             >
-              <span>{isListening ? '⏹️' : '🎤'}</span>
+              {isListening ? (
+                <Square className="w-3.5 h-3.5 text-rose-600" aria-hidden="true" />
+              ) : (
+                <Mic className="w-3.5 h-3.5 text-slate-600" aria-hidden="true" />
+              )}
               <span>{isListening ? 'Listening...' : 'Speak'}</span>
             </button>
 
@@ -264,7 +279,7 @@ export default function OfflineTranslator() {
             </>
           ) : (
             <>
-              <span>✨</span>
+              <Sparkles className="w-4 h-4" aria-hidden="true" />
               <span>Translate</span>
             </>
           )}
@@ -274,7 +289,7 @@ export default function OfflineTranslator() {
       {/* Error / Notice State */}
       {errorMessage && (
         <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2">
-          <span className="text-base leading-none">⚠️</span>
+          <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" aria-hidden="true" />
           <div className="flex-1 font-medium">{errorMessage}</div>
         </div>
       )}
@@ -292,23 +307,29 @@ export default function OfflineTranslator() {
                   <button
                     type="button"
                     onClick={handleSpeakOutput}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm transition-colors"
                   >
-                    🔊 Speak
+                    <Volume2 className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>Speak</span>
                   </button>
                   <button
                     type="button"
                     onClick={handleCopy}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm transition-colors"
                   >
-                    {copySuccess ? '✓ Copied' : '📋 Copy'}
+                    {copySuccess ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" aria-hidden="true" />
+                    )}
+                    <span>{copySuccess ? 'Copied' : 'Copy'}</span>
                   </button>
                 </>
               )}
               <button
                 type="button"
                 onClick={handleClear}
-                className="inline-flex items-center px-2 py-1 text-xs font-medium text-slate-400 hover:text-slate-600"
+                className="inline-flex items-center px-2 py-1 text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors"
               >
                 Clear
               </button>

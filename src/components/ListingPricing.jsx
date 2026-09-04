@@ -3,6 +3,24 @@ import { homestayDB } from '../services/db';
 import { homestayAI } from '../services/ai';
 import { calculatePricing } from '../services/pricingCalculator';
 import { ShareUtils } from '../services/share';
+import {
+  Sparkles,
+  Mountain,
+  Coffee,
+  Utensils,
+  ShowerHead,
+  Flame,
+  Car,
+  Plus,
+  X,
+  Lightbulb,
+  FileText,
+  Share2,
+  Languages,
+  Copy,
+  Check,
+  AlertTriangle
+} from 'lucide-react';
 
 export default function ListingPricing() {
   const [profile, setProfile] = useState({
@@ -28,12 +46,12 @@ export default function ListingPricing() {
   const [copyFeedback, setCopyFeedback] = useState(null);
 
   const standardAmenities = [
-    { name: 'Kanchenjunga View', icon: '🏔' },
-    { name: 'Organic Tea Tasting', icon: '🍵' },
-    { name: 'Home-cooked Meals', icon: '🍲' },
-    { name: 'Geyser facilities', icon: '🚿' },
-    { name: 'Evening Bonfire', icon: '🔥' },
-    { name: 'Shared Cab Guidance', icon: '🚘' },
+    { name: 'Kanchenjunga View', Icon: Mountain },
+    { name: 'Organic Tea Tasting', Icon: Coffee },
+    { name: 'Home-cooked Meals', Icon: Utensils },
+    { name: 'Geyser facilities', Icon: ShowerHead },
+    { name: 'Evening Bonfire', Icon: Flame },
+    { name: 'Shared Cab Guidance', Icon: Car },
   ];
 
   useEffect(() => {
@@ -159,7 +177,7 @@ export default function ListingPricing() {
 
   const handleShareAll = async () => {
     if (!generatedOutput || !pricingInfo) return;
-    const shareStr = `🏡 ${profile.name}\n\n🇬🇧 ENGLISH:\n${generatedOutput.en || ''}\n\n🇮🇳 HINDI:\n${generatedOutput.hi || ''}\n\n💡 RECOMMENDED RATES:\n• Off-Peak: ${pricingInfo.offPeak} per night\n• Peak Season: ${pricingInfo.peak} per night`;
+    const shareStr = `${profile.name}\n\nENGLISH:\n${generatedOutput.en || ''}\n\nHINDI:\n${generatedOutput.hi || ''}\n\nRECOMMENDED RATES:\n• Off-Peak: ${pricingInfo.offPeak} per night\n• Peak Season: ${pricingInfo.peak} per night`;
     await ShareUtils.shareText(`${profile.name} - Homestay Listing`, shareStr);
   };
 
@@ -218,7 +236,8 @@ export default function ListingPricing() {
       <div className="bg-white rounded-2xl p-5 mb-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
           <span className="text-lg font-bold text-forest-800 flex items-center gap-2">
-            <span>✨</span> AI Listing & Smart Pricing Helper
+            <Sparkles className="w-5 h-5 text-forest-800" aria-hidden="true" />
+            <span>AI Listing & Smart Pricing Helper</span>
           </span>
           {renderStatusBadge()}
         </div>
@@ -228,7 +247,7 @@ export default function ListingPricing() {
 
         {errorMessage && (
           <div className="mb-4 p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-center gap-2">
-            <span className="text-base">⚠️</span>
+            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" aria-hidden="true" />
             <span>{errorMessage}</span>
           </div>
         )}
@@ -302,6 +321,7 @@ export default function ListingPricing() {
               {/* Standard Amenities */}
               {standardAmenities.map((amenity) => {
                 const isChecked = (profile.amenities || []).includes(amenity.name);
+                const AmenityIcon = amenity.Icon;
                 return (
                   <button
                     type="button"
@@ -313,7 +333,8 @@ export default function ListingPricing() {
                         : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
                     }`}
                   >
-                    <span>{amenity.icon}</span> {amenity.name}
+                    <AmenityIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>{amenity.name}</span>
                   </button>
                 );
               })}
@@ -332,13 +353,14 @@ export default function ListingPricing() {
                         : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
                     }`}
                   >
-                    <span>✨</span> {custom}
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-700" aria-hidden="true" />
+                    <span>{custom}</span>
                     <span
                       onClick={(e) => handleRemoveCustomAmenity(custom, e)}
                       title="Remove custom amenity"
-                      className="ml-1 text-slate-400 hover:text-rose-600 font-bold px-1 rounded-full hover:bg-slate-200"
+                      className="ml-1 text-slate-400 hover:text-rose-600 font-bold p-0.5 rounded-full hover:bg-slate-200 inline-flex items-center justify-center"
                     >
-                      ✕
+                      <X className="w-3 h-3" aria-hidden="true" />
                     </span>
                   </button>
                 );
@@ -349,9 +371,10 @@ export default function ListingPricing() {
                 <button
                   type="button"
                   onClick={() => setIsAddingCustom(true)}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-pill text-xs font-bold border border-dashed border-forest-600 text-forest-800 bg-forest-50/50 hover:bg-forest-100 hover:border-forest-800 transition-all shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-xs font-bold border border-dashed border-forest-600 text-forest-800 bg-forest-50/50 hover:bg-forest-100 hover:border-forest-800 transition-all shadow-sm"
                 >
-                  <span>➕</span> + More
+                  <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>+ More</span>
                 </button>
               ) : (
                 <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-forest-300 shadow-sm animate-fadeIn">
@@ -369,7 +392,7 @@ export default function ListingPricing() {
                       }
                     }}
                     placeholder="e.g. Free Wi-Fi, BBQ..."
-                    className="border border-slate-300 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-forest-700 w-36 sm:w-44"
+                    className="border border-slate-300 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-forest-700 w-36 sm:w-44 bg-white"
                   />
                   <button
                     type="button"
@@ -384,9 +407,9 @@ export default function ListingPricing() {
                       setIsAddingCustom(false);
                       setCustomAmenityInput('');
                     }}
-                    className="text-slate-500 hover:text-slate-700 text-xs px-1.5 py-1 rounded-lg hover:bg-slate-200"
+                    className="text-slate-500 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-200 inline-flex items-center justify-center"
                   >
-                    ✕
+                    <X className="w-3.5 h-3.5" aria-hidden="true" />
                   </button>
                 </div>
               )}
@@ -411,7 +434,10 @@ export default function ListingPricing() {
                 <span>Generating AI Listing with Gemma...</span>
               </>
             ) : (
-              <span>✨ Generate AI Listing & Recommended Pricing</span>
+              <>
+                <Sparkles className="w-4 h-4" aria-hidden="true" />
+                <span>Generate AI Listing & Recommended Pricing</span>
+              </>
             )}
           </button>
         </form>
@@ -423,7 +449,8 @@ export default function ListingPricing() {
           {/* Pricing Card (Deterministic) */}
           <div className="bg-white rounded-2xl p-5 border-l-4 border-amberGold border-slate-200 border shadow-sm">
             <div className="text-base font-bold text-forest-800 mb-3 flex items-center gap-2">
-              <span>💡</span> Recommended Nightly Pricing Calculator
+              <Lightbulb className="w-5 h-5 text-amber-600" aria-hidden="true" />
+              <span>Recommended Nightly Pricing Calculator</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
@@ -444,28 +471,41 @@ export default function ListingPricing() {
             <div className="space-y-4">
               <div className="flex justify-between items-center flex-wrap gap-2">
                 <span className="text-base font-bold text-forest-800 flex items-center gap-2">
-                  <span>📢</span> Generated Homestay Listings (Gemma 4 E2B)
+                  <FileText className="w-5 h-5 text-forest-800" aria-hidden="true" />
+                  <span>Generated Homestay Listings (Gemma 4 E2B)</span>
                 </span>
                 <button
                   onClick={handleShareAll}
                   className="bg-amberGold hover:bg-amberGold-hover text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition-colors inline-flex items-center gap-1.5"
                 >
-                  📲 Share / Copy All Listings
+                  <Share2 className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>Share / Copy All Listings</span>
                 </button>
               </div>
 
-              {/* 🇬🇧 English Listing Card */}
+              {/* English Listing Card */}
               {generatedOutput.en && (
                 <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-center mb-3">
                     <h4 className="text-sm font-bold text-forest-800 flex items-center gap-2">
-                      <span className="text-lg">🇬🇧</span> English Listing
+                      <Languages className="w-4 h-4 text-forest-800" aria-hidden="true" />
+                      <span>English Listing</span>
                     </h4>
                     <button
                       onClick={() => copyToClipboard(generatedOutput.en, 'en')}
-                      className="text-xs text-forest-800 bg-forest-50 hover:bg-forest-100 border border-forest-200 px-2.5 py-1 rounded-lg font-semibold transition-colors"
+                      className="text-xs text-forest-800 bg-forest-50 hover:bg-forest-100 border border-forest-200 px-2.5 py-1 rounded-lg font-semibold transition-colors inline-flex items-center gap-1.5"
                     >
-                      {copyFeedback === 'en' ? '✓ Copied!' : '📋 Copy English'}
+                      {copyFeedback === 'en' ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" />
+                          <span>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" aria-hidden="true" />
+                          <span>Copy English</span>
+                        </>
+                      )}
                     </button>
                   </div>
                   <div className="bg-slate-50 border border-dashed border-forest-600 rounded-xl p-4 text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
@@ -474,18 +514,29 @@ export default function ListingPricing() {
                 </div>
               )}
 
-              {/* 🇮🇳 Hindi Listing Card */}
+              {/* Hindi Listing Card */}
               {generatedOutput.hi && (
                 <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-center mb-3">
                     <h4 className="text-sm font-bold text-forest-800 flex items-center gap-2">
-                      <span className="text-lg">🇮🇳</span> Hindi Listing (हिंदी)
+                      <Languages className="w-4 h-4 text-forest-800" aria-hidden="true" />
+                      <span>Hindi Listing (हिंदी)</span>
                     </h4>
                     <button
                       onClick={() => copyToClipboard(generatedOutput.hi, 'hi')}
-                      className="text-xs text-forest-800 bg-forest-50 hover:bg-forest-100 border border-forest-200 px-2.5 py-1 rounded-lg font-semibold transition-colors"
+                      className="text-xs text-forest-800 bg-forest-50 hover:bg-forest-100 border border-forest-200 px-2.5 py-1 rounded-lg font-semibold transition-colors inline-flex items-center gap-1.5"
                     >
-                      {copyFeedback === 'hi' ? '✓ Copied!' : '📋 Copy Hindi'}
+                      {copyFeedback === 'hi' ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" />
+                          <span>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" aria-hidden="true" />
+                          <span>Copy Hindi</span>
+                        </>
+                      )}
                     </button>
                   </div>
                   <div className="bg-slate-50 border border-dashed border-forest-600 rounded-xl p-4 text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
