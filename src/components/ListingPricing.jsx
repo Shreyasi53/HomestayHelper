@@ -11,24 +11,28 @@ export default function ListingPricing() {
     village: "Takdah Cantonment",
     roomType: "attached_bath",
     roomCount: 2,
-    amenities: ["Kanchenjunga View", "Organic Tea Tasting", "Home-cooked Meals", "Hot Bucket Water"]
+    amenities: ["Kanchenjunga View", "Organic Tea Tasting", "Home-cooked Meals", "Geyser facilities"]
   });
 
   const [pricingInfo, setPricingInfo] = useState(null);
-  const [generatedOutput, setGeneratedOutput] = useState(null);
+  const [generatedOutput, setGeneratedOutput] = useState(null); // { en: string, hi: string }
   const [engineStatus, setEngineStatus] = useState('checking');
   const [engineError, setEngineError] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
-  const availableAmenities = [
+  // Custom Amenities state
+  const [isAddingCustom, setIsAddingCustom] = useState(false);
+  const [customAmenityInput, setCustomAmenityInput] = useState('');
+  const [customAmenities, setCustomAmenities] = useState([]);
+  const [copyFeedback, setCopyFeedback] = useState(null);
+
+  const standardAmenities = [
     { name: 'Kanchenjunga View', icon: '🏔' },
     { name: 'Organic Tea Tasting', icon: '🍵' },
     { name: 'Home-cooked Meals', icon: '🍲' },
-    { name: 'Hot Bucket Water', icon: '🚰' },
+    { name: 'Geyser facilities', icon: '🚿' },
     { name: 'Evening Bonfire', icon: '🔥' },
-    { name: 'Tea Garden Trail Walk', icon: '🌿' },
-    { name: 'Solar Light Backup', icon: '💡' },
     { name: 'Shared Cab Guidance', icon: '🚘' },
   ];
 
@@ -38,7 +42,23 @@ export default function ListingPricing() {
       try {
         const saved = await homestayDB.getListingProfile();
         if (saved) {
-          setProfile(saved);
+          // Migrate old amenity names if present
+          const cleanedAmenities = (saved.amenities || []).map((a) => {
+            if (a === 'Hot Bucket Water') return 'Geyser facilities';
+            return a;
+          }).filter((a) => a !== 'Tea Garden Trail Walk' && a !== 'Solar Light Backup');
+
+          // Extract any saved custom amenities that are not standard
+          const standardNames = standardAmenities.map(s => s.name);
+          const savedCustom = cleanedAmenities.filter(a => !standardNames.includes(a));
+          if (savedCustom.length > 0) {
+            setCustomAmenities(savedCustom);
+          }
+
+          setProfile({
+            ...saved,
+            amenities: cleanedAmenities
+          });
         }
       } catch (err) {
         console.warn('[ListingPricing] Failed to load saved profile:', err);
@@ -68,6 +88,38 @@ export default function ListingPricing() {
     }
   };
 
+  const handleAddCustomAmenity = (e) => {
+    e?.preventDefault();
+    const trimmed = customAmenityInput.trim();
+    if (!trimmed) return;
+
+    // Prevent duplicates (case-insensitive)
+    const allCurrent = [...standardAmenities.map(a => a.name), ...customAmenities];
+    const isDuplicate = allCurrent.some(a => a.toLowerCase() === trimmed.toLowerCase());
+
+    if (isDuplicate) {
+      alert('This amenity is already in your list!');
+      return;
+    }
+
+    setCustomAmenities([...customAmenities, trimmed]);
+    setProfile({
+      ...profile,
+      amenities: [...(profile.amenities || []), trimmed]
+    });
+    setCustomAmenityInput('');
+    setIsAddingCustom(false);
+  };
+
+  const handleRemoveCustomAmenity = (nameToRemove, e) => {
+    e.stopPropagation();
+    setCustomAmenities(customAmenities.filter(a => a !== nameToRemove));
+    setProfile({
+      ...profile,
+      amenities: (profile.amenities || []).filter(a => a !== nameToRemove)
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -79,18 +131,18 @@ export default function ListingPricing() {
       console.warn('[ListingPricing] IndexedDB save error:', dbErr);
     }
 
-    // 2. Calculate Pricing deterministically (Pure math, no AI)
+    // 2. Calculate Pricing deterministically (Pure math, no AI, counts all amenities)
     const pricing = calculatePricing({
       roomCategory: profile.roomType,
       amenities: profile.amenities
     });
     setPricingInfo(pricing);
 
-    // 3. Generate natural-language listing with real on-device Gemma
+    // 3. Generate natural-language bilingual listing with real on-device Gemma 4 E2B
     setIsGenerating(true);
     try {
       const listing = await homestayAI.generateListingText(profile);
-      setGeneratedOutput(listing.en);
+      setGeneratedOutput(listing);
     } catch (err) {
       console.error('[ListingPricing] AI generation error:', err);
       if (engineStatus === 'offline' || err.message?.includes('fetch') || err.message?.includes('reach')) {
@@ -105,10 +157,18 @@ export default function ListingPricing() {
     }
   };
 
-  const handleShare = async () => {
+  const handleShareAll = async () => {
     if (!generatedOutput || !pricingInfo) return;
-    const shareStr = `${generatedOutput}\n\nRecommended Rates:\n• Off-Peak: ${pricingInfo.offPeak} per night\n• Peak Season: ${pricingInfo.peak} per night`;
+    const shareStr = `🏡 ${profile.name}\n\n🇬🇧 ENGLISH:\n${generatedOutput.en || ''}\n\n🇮🇳 HINDI:\n${generatedOutput.hi || ''}\n\n💡 RECOMMENDED RATES:\n• Off-Peak: ${pricingInfo.offPeak} per night\n• Peak Season: ${pricingInfo.peak} per night`;
     await ShareUtils.shareText(`${profile.name} - Homestay Listing`, shareStr);
+  };
+
+  const copyToClipboard = (text, type) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopyFeedback(type);
+      setTimeout(() => setCopyFeedback(null), 2000);
+    });
   };
 
   // Render Engine Status Badge
@@ -163,7 +223,7 @@ export default function ListingPricing() {
           {renderStatusBadge()}
         </div>
         <p className="text-sm text-slate-500 mb-4">
-          Create an attractive homestay description with on-device Gemma AI & calculate optimal nightly pricing for your village.
+          Create an attractive bilingual homestay description with on-device Gemma AI & calculate optimal nightly pricing for your village.
         </p>
 
         {errorMessage && (
@@ -238,8 +298,9 @@ export default function ListingPricing() {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-2">Select Homestay Highlights & Amenities:</label>
-            <div className="flex flex-wrap gap-2">
-              {availableAmenities.map((amenity) => {
+            <div className="flex flex-wrap gap-2 items-center">
+              {/* Standard Amenities */}
+              {standardAmenities.map((amenity) => {
                 const isChecked = (profile.amenities || []).includes(amenity.name);
                 return (
                   <button
@@ -256,6 +317,79 @@ export default function ListingPricing() {
                   </button>
                 );
               })}
+
+              {/* Custom Added Amenities */}
+              {customAmenities.map((custom) => {
+                const isChecked = (profile.amenities || []).includes(custom);
+                return (
+                  <button
+                    type="button"
+                    key={custom}
+                    onClick={() => toggleAmenity(custom)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-xs font-semibold border transition-all ${
+                      isChecked
+                        ? 'bg-emerald-100 border-emerald-700 text-emerald-900 font-bold shadow-sm'
+                        : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>✨</span> {custom}
+                    <span
+                      onClick={(e) => handleRemoveCustomAmenity(custom, e)}
+                      title="Remove custom amenity"
+                      className="ml-1 text-slate-400 hover:text-rose-600 font-bold px-1 rounded-full hover:bg-slate-200"
+                    >
+                      ✕
+                    </span>
+                  </button>
+                );
+              })}
+
+              {/* + More Button */}
+              {!isAddingCustom ? (
+                <button
+                  type="button"
+                  onClick={() => setIsAddingCustom(true)}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-pill text-xs font-bold border border-dashed border-forest-600 text-forest-800 bg-forest-50/50 hover:bg-forest-100 hover:border-forest-800 transition-all shadow-sm"
+                >
+                  <span>➕</span> + More
+                </button>
+              ) : (
+                <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-forest-300 shadow-sm animate-fadeIn">
+                  <input
+                    type="text"
+                    autoFocus
+                    value={customAmenityInput}
+                    onChange={(e) => setCustomAmenityInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddCustomAmenity();
+                      } else if (e.key === 'Escape') {
+                        setIsAddingCustom(false);
+                      }
+                    }}
+                    placeholder="e.g. Free Wi-Fi, BBQ..."
+                    className="border border-slate-300 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-forest-700 w-36 sm:w-44"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCustomAmenity}
+                    className="bg-forest-800 text-white text-xs font-bold px-2.5 py-1 rounded-lg hover:bg-forest-700 transition-colors"
+                  >
+                    Add
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingCustom(false);
+                      setCustomAmenityInput('');
+                    }}
+                    className="text-slate-500 hover:text-slate-700 text-xs px-1.5 py-1 rounded-lg hover:bg-slate-200"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -286,7 +420,7 @@ export default function ListingPricing() {
       {/* Results Section */}
       {pricingInfo && (
         <div className="space-y-5">
-          {/* Pricing Card */}
+          {/* Pricing Card (Deterministic) */}
           <div className="bg-white rounded-2xl p-5 border-l-4 border-amberGold border-slate-200 border shadow-sm">
             <div className="text-base font-bold text-forest-800 mb-3 flex items-center gap-2">
               <span>💡</span> Recommended Nightly Pricing Calculator
@@ -305,31 +439,60 @@ export default function ListingPricing() {
             </div>
           </div>
 
-          {/* Listing Copy Card */}
+          {/* Bilingual Listing Cards (Generated by Gemma 4 E2B) */}
           {generatedOutput && (
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-              <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center flex-wrap gap-2">
                 <span className="text-base font-bold text-forest-800 flex items-center gap-2">
-                  <span>📢</span> Generated Homestay Listing Text
+                  <span>📢</span> Generated Homestay Listings (Gemma 4 E2B)
                 </span>
                 <button
-                  onClick={handleShare}
-                  className="bg-amberGold hover:bg-amberGold-hover text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm transition-colors inline-flex items-center gap-1"
+                  onClick={handleShareAll}
+                  className="bg-amberGold hover:bg-amberGold-hover text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition-colors inline-flex items-center gap-1.5"
                 >
-                  📲 Share / Copy Listing
+                  📲 Share / Copy All Listings
                 </button>
               </div>
 
-              <div className="bg-slate-50 border border-dashed border-forest-700 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-bold text-forest-800 uppercase tracking-wide">
-                    Listing Description (Generated by Gemma 4 E2B):
-                  </h4>
+              {/* 🇬🇧 English Listing Card */}
+              {generatedOutput.en && (
+                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="text-sm font-bold text-forest-800 flex items-center gap-2">
+                      <span className="text-lg">🇬🇧</span> English Listing
+                    </h4>
+                    <button
+                      onClick={() => copyToClipboard(generatedOutput.en, 'en')}
+                      className="text-xs text-forest-800 bg-forest-50 hover:bg-forest-100 border border-forest-200 px-2.5 py-1 rounded-lg font-semibold transition-colors"
+                    >
+                      {copyFeedback === 'en' ? '✓ Copied!' : '📋 Copy English'}
+                    </button>
+                  </div>
+                  <div className="bg-slate-50 border border-dashed border-forest-600 rounded-xl p-4 text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
+                    {generatedOutput.en}
+                  </div>
                 </div>
-                <div className="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
-                  {generatedOutput}
+              )}
+
+              {/* 🇮🇳 Hindi Listing Card */}
+              {generatedOutput.hi && (
+                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="text-sm font-bold text-forest-800 flex items-center gap-2">
+                      <span className="text-lg">🇮🇳</span> Hindi Listing (हिंदी)
+                    </h4>
+                    <button
+                      onClick={() => copyToClipboard(generatedOutput.hi, 'hi')}
+                      className="text-xs text-forest-800 bg-forest-50 hover:bg-forest-100 border border-forest-200 px-2.5 py-1 rounded-lg font-semibold transition-colors"
+                    >
+                      {copyFeedback === 'hi' ? '✓ Copied!' : '📋 Copy Hindi'}
+                    </button>
+                  </div>
+                  <div className="bg-slate-50 border border-dashed border-forest-600 rounded-xl p-4 text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
+                    {generatedOutput.hi}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>
