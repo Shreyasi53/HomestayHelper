@@ -1,4 +1,4 @@
-const CACHE_NAME = 'homestay-helper-react-v1';
+const CACHE_NAME = 'homestay-helper-react-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -32,11 +32,20 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Stale-While-Revalidate caching strategy
+  const url = new URL(event.request.url);
+  const isOllamaOrApi = url.pathname.includes('/api/ollama') || url.pathname.startsWith('/api/') || url.port === '11434';
+
+  // 1. Pass-through for non-GET requests (POST, etc.) and Ollama / API requests without caching
+  if (event.request.method !== 'GET' || isOllamaOrApi) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // 2. Stale-While-Revalidate caching strategy for normal static GET assets
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
+        if (networkResponse && networkResponse.status === 200 && event.request.method === 'GET') {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
