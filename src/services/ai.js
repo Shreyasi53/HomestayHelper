@@ -1,7 +1,7 @@
 // On-Device AI Generator & Smart Pricing Synthesizer
 class HomestayAI {
   constructor() {
-    this.hasChromeAI = typeof window.ai !== 'undefined' && typeof window.ai.assistant !== 'undefined';
+    this.hasChromeAI = typeof window !== 'undefined' && typeof window.ai !== 'undefined' && typeof window.ai.assistant !== 'undefined';
   }
 
   /**
@@ -18,7 +18,10 @@ class HomestayAI {
         const aiResponse = await session.prompt(prompt);
         session.destroy();
         if (aiResponse && aiResponse.trim().length > 20) {
-          return aiResponse.trim();
+          return {
+            en: aiResponse.trim(),
+            hi: ''
+          };
         }
       } catch (err) {
         console.warn('[AI] Chrome Prompt API error, using local synthesizer fallback:', err);
@@ -83,4 +86,5 @@ class HomestayAI {
   }
 }
 
-window.homestayAI = new HomestayAI();
+export const homestayAI = new HomestayAI();
+export default homestayAI;

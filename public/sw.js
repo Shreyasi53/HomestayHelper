@@ -1,20 +1,8 @@
-const CACHE_NAME = 'homestay-helper-v1';
+const CACHE_NAME = 'homestay-helper-react-v1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  './css/styles.css',
-  './js/app.js',
-  './js/db.js',
-  './js/data/phrases.js',
-  './js/data/checklist.js',
-  './js/utils/tts.js',
-  './js/utils/ai.js',
-  './js/utils/share.js',
-  './js/components/communicator.js',
-  './js/components/ledger.js',
-  './js/components/listing.js',
-  './js/components/checklist.js',
   './icons/icon-192.png',
   './icons/icon-512.png'
 ];
@@ -22,7 +10,7 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Caching all offline assets');
+      console.log('[Service Worker] Caching core offline shell assets');
       return cache.addAll(ASSETS_TO_CACHE);
     }).then(() => self.skipWaiting())
   );
@@ -48,7 +36,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+        if (networkResponse && networkResponse.status === 200) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
@@ -56,7 +44,7 @@ self.addEventListener('fetch', (event) => {
         }
         return networkResponse;
       }).catch(() => {
-        // Network failed (Airplane mode) - fallback to cache silently
+        // Network failed (Airplane mode / Zero Bars) - fallback to cache silently
         return cachedResponse;
       });
 

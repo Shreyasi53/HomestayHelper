@@ -1,10 +1,10 @@
 // Web Share & CSV Data Export Utility
-class ShareUtils {
+export class ShareUtils {
   /**
    * Triggers Web Share API or falls back to Clipboard Copy
    */
   static async shareText(title, text) {
-    if (navigator.share) {
+    if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
           title: title,
@@ -22,13 +22,16 @@ class ShareUtils {
 
     // Fallback: Copy to clipboard
     try {
-      await navigator.clipboard.writeText(text);
-      alert('Listing copied to clipboard! You can paste it in WhatsApp or SMS.');
-      return true;
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+        alert('Listing copied to clipboard! You can paste it in WhatsApp or SMS.');
+        return true;
+      }
     } catch (err) {
       alert('Could not auto-copy. Please manually copy the text.');
       return false;
     }
+    return false;
   }
 
   /**
@@ -64,4 +67,4 @@ class ShareUtils {
   }
 }
 
-window.ShareUtils = ShareUtils;
+export default ShareUtils;

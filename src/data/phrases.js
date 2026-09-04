@@ -1,5 +1,5 @@
 // Curated Offline Bilingual Phrasebook for Homestays
-window.HOMESTAY_PHRASES = [
+export const HOMESTAY_PHRASES = [
   // --- ARRIVAL & ROOMS ---
   {
     id: "arr_1",
@@ -170,3 +170,5 @@ window.HOMESTAY_PHRASES = [
     bn: "সাথে ছাতা রাখবেন, পাহাড়ে যেকোনো সময় বৃষ্টি নামতে পারে।"
   }
 ];
+
+export default HOMESTAY_PHRASES;

@@ -1,23 +1,26 @@
 // Text-To-Speech & Audio Engine for Homestay Communicator
 class AudioTTS {
   constructor() {
-    this.synth = window.speechSynthesis || null;
+    this.synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
     this.voices = [];
     if (this.synth) {
       this._loadVoices();
-      if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = () => this._loadVoices();
+      if (typeof window !== 'undefined' && window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = () => this._loadVoices();
       }
     }
   }
 
   _loadVoices() {
-    this.voices = this.synth.getVoices();
+    if (this.synth) {
+      this.voices = this.synth.getVoices();
+    }
   }
 
   speak(text, lang = 'en-US', onStart = null, onEnd = null) {
     if (!this.synth) {
       alert("Speech Synthesis is not supported in this browser. Please read the card aloud.");
+      if (onEnd) onEnd();
       return;
     }
 
@@ -35,6 +38,10 @@ class AudioTTS {
     else if (lang === 'en') langCode = 'en-IN';
 
     utterance.lang = langCode;
+
+    if (this.voices.length === 0) {
+      this._loadVoices();
+    }
 
     // Pick best matching voice
     const matchedVoice = this.voices.find(v => v.lang.includes(langCode) || v.lang.startsWith(langCode.substring(0, 2)));
@@ -57,4 +64,5 @@ class AudioTTS {
   }
 }
 
-window.appTTS = new AudioTTS();
+export const appTTS = new AudioTTS();
+export default appTTS;

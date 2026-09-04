@@ -1,5 +1,5 @@
 // First-Time Host Checklist & Local Hill Hospitality Guide
-window.HOST_CHECKLIST = [
+export const HOST_CHECKLIST = [
   {
     category: "Room Preparation",
     icon: "🛏",
@@ -42,7 +42,7 @@ window.HOST_CHECKLIST = [
   }
 ];
 
-window.LOCAL_HILL_FACTS = [
+export const LOCAL_HILL_FACTS = [
   {
     title: "Darjeeling Himalayan Railway (DHR)",
     fact: "Opened in 1881, the DHR toy train runs on a 2-foot narrow gauge track over 88 km from Siliguri to Darjeeling. It was declared a UNESCO World Heritage site in 1999."
