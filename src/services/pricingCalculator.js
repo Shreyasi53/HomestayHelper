@@ -1,10 +1,4 @@
-/**
- * Deterministic Pricing Calculator for Homestay Helper
- * 
- * Calculates recommended nightly rates purely using mathematical rules
- * based on room category, amenity count, and season.
- * Does NOT invoke any AI or LLMs.
- */
+
 
 // Peak tourist season months in Darjeeling / Himalayan foothills:
 // March (3), April (4), May (5), October (10), November (11)
