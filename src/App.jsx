@@ -151,7 +151,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#f4f7f5] pb-24 md:pb-12 text-slate-800">
-      {/* App Header */}
+     
       <header className="bg-gradient-to-r from-forest-900 to-forest-800 text-white px-4 py-3.5 sticky top-0 z-40 shadow-md">
         <div className="max-w-5xl mx-auto flex justify-between items-center gap-2">
           <div className="flex items-center gap-3 min-w-0">
@@ -241,7 +241,7 @@ export default function App() {
         </div>
       </nav>
 
-      {/* Main Content Area */}
+      
       <main className="max-w-5xl mx-auto px-4 py-5">
         {activeTab === 'tabCommunicator' && <GuestCommunicator />}
         {activeTab === 'tabLedger' && <BookingsLedger />}
@@ -249,7 +249,7 @@ export default function App() {
         {activeTab === 'tabChecklist' && <HostReadinessChecklist />}
       </main>
 
-      {/* Bottom Navigation Bar (Mobile View) */}
+      
       <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-forest-900 border-t border-white/10 z-50 flex justify-around py-2 px-1 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
         <button
           onClick={() => {
